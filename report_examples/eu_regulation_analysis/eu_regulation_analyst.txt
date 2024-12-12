@@ -1,0 +1,27 @@
+This report type focuses on EU AI regulation analysis from the maritime industry point of view.
+
+The report structure should include:
+1. Introduction (no research needed)
+   - Brief overview of the topic area
+   - Key considerations and objectives
+
+2. Main Body Sections:
+   - One dedicated section for EACH offering being compared in the user-provided list
+   - Each section should examine:
+     - Core Features (bulleted list)
+     - Describe possible impacts on the maritime products produced by a private company (2-3 sentences)
+     - Describe an impact from the organization point of view
+     - Overview of possible penalties if regulation is not met
+     - Overview of deadline for compliance
+  
+3. No Main Body Sections other than the ones dedicated to each offering in the user-provided list
+
+4. Conclusion with Comparison Table (no research needed)
+   - Structured comparison table that:
+     * Compares all regulation from the user-provided list across key dimensions
+     * Highlights relative strengths and weaknesses
+   - Final recommendations
+
+
+
+Question: Give an overview of the following EU regulations: EU AI act, AI Liability Directive and EU Data Act.

@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from tavily import TavilyClient, AsyncTavilyClient
 
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_anthropic import ChatAnthropic 
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -17,12 +17,23 @@ from langgraph.constants import Send
 from langgraph.graph import START, END, StateGraph
 from langsmith import traceable
 import configuration
-
+import os
 # ------------------------------------------------------------
 # LLMs 
 
 gpt_4o = ChatOpenAI(model="gpt-4o", temperature=0) 
 claude_3_5_sonnet = ChatAnthropic(model="claude-3-5-sonnet-20240620", temperature=0) 
+
+selected_azure_model = "gpt-4o" # gpt-4o-mini, gpt-4o or o1-preview
+model_azure = AzureChatOpenAI(temperature=0, 
+                                    openai_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+                                    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+                                    azure_deployment=selected_azure_model,
+                                    api_version="2024-05-01-preview",
+                                    model=selected_azure_model,
+                                    )
+
+model = model_azure
 
 # ------------------------------------------------------------
 # Search
@@ -305,7 +316,7 @@ Guidelines for writing:
 - Use technical terminology precisely
 
 2. Length and Style:
-- Strict 150-200 word limit
+- Strict 500-1000 word limit
 - No marketing language
 - Technical focus
 - Write in simple, clear language
@@ -335,7 +346,7 @@ Guidelines for writing:
 {context}
 
 5. Quality Checks:
-- Exactly 150-200 words (excluding title and sources)
+- Exactly 500-1000 words (excluding title and sources)
 - Careful use of only ONE structural element (table or list) and only if it helps clarify your point
 - One specific example / case study
 - Starts with bold insight
@@ -410,7 +421,7 @@ async def generate_report_plan(state: ReportState, config: RunnableConfig):
         report_structure = str(report_structure)
 
     # Generate search query
-    structured_llm = claude_3_5_sonnet.with_structured_output(Queries)
+    structured_llm = model.with_structured_output(Queries)
 
     # Format system instructions
     system_instructions_query = report_planner_query_writer_instructions.format(topic=topic, report_organization=report_structure, number_of_queries=number_of_queries)
@@ -431,7 +442,7 @@ async def generate_report_plan(state: ReportState, config: RunnableConfig):
     system_instructions_sections = report_planner_instructions.format(topic=topic, report_organization=report_structure, context=source_str)
 
     # Generate sections 
-    structured_llm = claude_3_5_sonnet.with_structured_output(Sections)
+    structured_llm = model.with_structured_output(Sections)
     report_sections = structured_llm.invoke([SystemMessage(content=system_instructions_sections)]+[HumanMessage(content="Generate the sections of the report. Your response must include a 'sections' field containing a list of sections. Each section must have: name, description, plan, research, and content fields.")])
 
     return {"sections": report_sections.sections}
@@ -447,7 +458,7 @@ def generate_queries(state: SectionState, config: RunnableConfig):
     number_of_queries = configurable.number_of_queries
 
     # Generate queries 
-    structured_llm = gpt_4o.with_structured_output(Queries)
+    structured_llm = model.with_structured_output(Queries)
 
     # Format system instructions
     system_instructions = query_writer_instructions.format(section_topic=section.description, number_of_queries=number_of_queries)
@@ -488,7 +499,7 @@ def write_section(state: SectionState):
     system_instructions = section_writer_instructions.format(section_title=section.name, section_topic=section.description, context=source_str)
 
     # Generate section  
-    section_content = claude_3_5_sonnet.invoke([SystemMessage(content=system_instructions)]+[HumanMessage(content="Generate a report section based on the provided sources.")])
+    section_content = model.invoke([SystemMessage(content=system_instructions)]+[HumanMessage(content="Generate a report section based on the provided sources.")])
     
     # Write content to the section object  
     section.content = section_content.content
@@ -528,7 +539,7 @@ def write_final_sections(state: SectionState):
     system_instructions = final_section_writer_instructions.format(section_title=section.name, section_topic=section.description, context=completed_report_sections)
 
     # Generate section  
-    section_content = claude_3_5_sonnet.invoke([SystemMessage(content=system_instructions)]+[HumanMessage(content="Generate a report section based on the provided sources.")])
+    section_content = model.invoke([SystemMessage(content=system_instructions)]+[HumanMessage(content="Generate a report section based on the provided sources.")])
     
     # Write content to section 
     section.content = section_content.content
