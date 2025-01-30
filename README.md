@@ -93,3 +93,17 @@ $ jupyter notebook report_maistro.ipynb
 ## Deploying 
 
 LangGraph Platform allows various [deployment options](https://langchain-ai.github.io/langgraph/concepts/#deployment-options). 
+
+
+### Running langgraph
+
+```
+$ langgraph dev
+```
+Langgraph studio will be available under: https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024
+
+If you get errors while trying to re-run, use the following command and restart the langgraph dev.:
+
+```
+$ rm -rf .langgraph_api
+```
